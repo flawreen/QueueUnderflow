@@ -1,0 +1,25 @@
+﻿<h2>Form for adding a discussion</h2>
+
+<form method="post" action="/Discussions/New">
+
+    <label>Discussion title</label>
+
+    <input type="text" name="Title" />
+
+    <br />
+
+    <label>Discussion content</label>
+
+    <textarea name="Content"></textarea>
+
+    <input type="hidden" name="CategoryId" value="1" />
+
+    <br />
+
+    <input type="hidden" name="Date" value="@DateTime.Now" />
+
+    <br />
+
+    <button type="submit">Add discussion</button>
+
+</form>

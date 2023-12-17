@@ -1,0 +1,28 @@
+﻿
+<h2>Discussion edit</h2>
+
+<form method="post" action="/Discussions/Edit/@ViewBag.Discussion.Id">
+
+    <label>Discussion title</label>
+    <br />
+
+    <input type="text" name="Title" value="@ViewBag.Discussion.Title" />
+    <br /><br />
+
+    <label>Discussion content</label>
+    <br />
+
+    <input type="text" name="Content" value="@ViewBag.Discussion.Content" />
+    <br /><br />
+
+    <label>Data</label>
+    <br />
+
+    <input type="text" name="Date" value="@ViewBag.Discussion.Date" />
+    <br />
+
+    <button type="submit">Modify discussion</button>
+
+</form>
+
+

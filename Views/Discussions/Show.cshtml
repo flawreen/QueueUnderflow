@@ -1,0 +1,18 @@
+﻿<h2>Show discussion</h2>
+<br />
+
+<p>@ViewBag.Discussion.Title</p>
+<p>@ViewBag.Discussion.Content</p>
+<p>@ViewBag.Discussion.Date</p>
+
+<br />
+
+<form method="post" action="/Discussions/Delete/@ViewBag.Discussion.Id">
+
+    <button type="submit">Delete discussion</button>
+
+</form>
+
+<br />
+
+<a href="/Discussions/Index">Show discussions</a>
