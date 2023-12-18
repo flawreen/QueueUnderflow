@@ -1,19 +1,45 @@
-﻿<h2>Afisare categorii</h2>
+﻿<h2 class="h2-title">Categories</h2>
 <br />
 
-@foreach (var categ in ViewBag.Categories)
-{
-    <p>@categ.CategoryName</p>
-   
-    <br />
-    <a href="/Categories/Show/@categ.Id">Show category</a>
-    <br />
-    <a href="/Categories/Edit/@categ.Id">Edit category</a>
-    <hr />
-
+@* In Index afisez titlul categoriei + primele 3 discutii
+   + buton care trimite catre Show pt taskul tau cu afisare paginata
+*@
+@{
+    int discussionCount;
 }
+<div>
+    @foreach (QueueUnderflow.Models.Category categ in ViewBag.Categories)
+    {
+        @if (categ.Discussions.Count() > 3)
+        {
+            discussionCount = 3;
+        } else
+        {
+            discussionCount = categ.Discussions.Count();
+        }
 
-<a href="/Categories/New">Add category</a>
-<br />
+        <div class="row category-title">
+            @categ.CategoryName
+        </div>
 
-<a href="/Discussions/Index">Show discussions</a>
+        @foreach(QueueUnderflow.Models.Discussion discussion in categ.Discussions)
+        {
+            @if (discussionCount <= 0)
+            {
+                break;
+            }
+
+            <div class="row card" style="width:80rem;">
+                @Html.Partial("DiscussionPreview", discussion)
+            </div>
+
+            discussionCount -= 1;
+        }
+
+        @* butonul cu 'afisati toate discutiile din categorie'*@
+        <div class="text-end">
+            <a href="/Categories/Show/@categ.Id" class="link-dark more"><i class="bi bi-caret-right"></i> See all discussions</a>
+        </div>
+        <br /><br />
+    }
+</div>

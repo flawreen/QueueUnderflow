@@ -1,17 +1,15 @@
-﻿<h2>Show category</h2>
-<br />
+﻿@model QueueUnderflow.Models.Category
 
-<p>@ViewBag.Category.CategoryName</p>
+<div>
+    <div class="row category-title">
+        @Model.CategoryName
+    </div>
 
-<br />
-
-<form method="post" action="/Categories/Delete/@ViewBag.Category.Id">
-
-    <button type="submit">Delete category</button>
-
-</form>
-
-<br />
-
-<a href="/Categories/Index">Show categories</a>
+    @foreach (QueueUnderflow.Models.Discussion discussion in Model.Discussions)
+    {
+        <div class="row card" style="width:80rem;">
+            @Html.Partial("DiscussionPreview", discussion)
+        </div>
+    }
+</div>
 
