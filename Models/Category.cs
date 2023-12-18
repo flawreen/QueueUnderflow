@@ -6,8 +6,8 @@ namespace QueueUnderflow.Models
     {
         [Key]
         public int Id { get; set; }
-        [Required(ErrorMessage = "Numele categoriei este obligatoriu")]
+        [Required(ErrorMessage = "The name of the category is required")]
         public string CategoryName { get; set; }
-        public virtual ICollection<Topic> Topics { get; set; }
+        public virtual ICollection<Discussion>? Discussions { get; set; }
     }
 }

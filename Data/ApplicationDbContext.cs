@@ -4,16 +4,16 @@ using QueueUnderflow.Models;
 
 namespace QueueUnderflow.Data
 {
-    public class ApplicationDbContext : IdentityDbContext
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
 
         }
-
-        public DbSet<Topic> Topics { get; set; }
+        public DbSet<ApplicationUser> ApplicationUsers { get; set; }
+        public DbSet<Discussion> Discussions { get; set; }
         public DbSet<Category> Categories { get; set; }
-        public DbSet<Comment> Comments { get; set; }
+        public DbSet<Answer> Answers { get; set; }
     }
 }
