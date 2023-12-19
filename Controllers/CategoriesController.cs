@@ -28,11 +28,47 @@ namespace QueueUnderflow.Controllers
 
         public ActionResult Show(int id)
         {
+<<<<<<< Updated upstream
             Category categ = db.Categories.Find(id);
 
             ViewBag.Category = categ;
 
             return View();
+=======
+
+            Category categ = db.Categories.Include("Discussions").Where(cat => cat.Id == id).First();
+
+            // Alegem sa afisam 3 discutii pe pagina
+            int _perPage = 3;
+            var discussions = db.Discussions.Include("Category").Include("User").OrderBy(a => a.Date);
+            if (TempData.ContainsKey("message"))
+            {
+                ViewBag.message = TempData["message"].ToString();
+                ViewBag.Alert = TempData["messageType"];
+            }
+
+            // Fiind un numar variabil de discutii, verificam de fiecare data utilizand
+            // metoda Count()
+            int totalItems = discussions.Count();
+
+            // Se preia pagina curenta din View-ul asociat
+            // Numarul paginii este valoarea parametrului page din ruta
+            // /Discussions/Show/Model.Id?page=valoare
+            var currentPage = Convert.ToInt32(HttpContext.Request.Query["page"]);
+            
+            var offset = 0;
+            
+            if (!currentPage.Equals(0))
+            {
+                offset = (currentPage - 1) * _perPage;
+            }
+            var paginatedDiscussions = discussions.Skip(offset).Take(_perPage);
+
+            // Preluam numarul ultimei pagini
+            ViewBag.lastPage = Math.Ceiling((float)totalItems / (float)_perPage);
+            ViewBag.Discussions = paginatedDiscussions;
+            return View(categ);
+>>>>>>> Stashed changes
         }
 
         public IActionResult New()

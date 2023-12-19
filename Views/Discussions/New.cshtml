@@ -1,25 +1,59 @@
-﻿<h2>Form for adding a discussion</h2>
+﻿@model QueueUnderflow.Models.Discussion
 
-<form method="post" action="/Discussions/New">
 
-    <label>Discussion title</label>
+<h2 class="text-center mt-5">Add discussion</h2>
+<br />
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-6 offset-3">
 
-    <input type="text" name="Title" />
+            @using (Html.BeginForm(actionName: "New", controllerName: "Discussions",
+            method: FormMethod.Post))
+            {
 
-    <br />
+                @Html.ValidationSummary(false, "", new { @class = "text-danger" })
 
-    <label>Discussion content</label>
+                @Html.Label("Title", "Disussion title")
+                <br />
+                @Html.TextBox("Title", null, new { @class = "form-control" })
 
-    <textarea name="Content"></textarea>
+                @Html.ValidationMessageFor(m => m.Title, "", new { @class = "text-danger" })
+                <br />
 
-    <input type="hidden" name="CategoryId" value="1" />
+                <br />
 
-    <br />
+                @Html.Label("Content", "Discussion content")
+                <br />
+                @Html.TextArea("Content", null, new { @class = "form-control" })
 
-    <input type="hidden" name="Date" value="@DateTime.Now" />
+                @Html.ValidationMessage("Content", null, new { @class = "text-danger" })
+                <br />
 
-    <br />
+                <br />
 
-    <button type="submit">Add discussion</button>
 
-</form>
+                <input type="hidden" name="CategoryId" value="1" />
+                @*<label>Select the category</label>
+                @Html.DropDownListFor(m => m.CategoryId, new SelectList(Model.Categ, "Value", "Text"),
+                         "Select the category", new { @class = "form-control" })*@
+
+                @Html.ValidationMessageFor(m => m.CategoryId, null, new { @class = "text-danger" })
+                <br />
+
+                <br />
+
+                <button class="btn btn-success" type="submit">Add discussion</button>
+
+            }
+
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+

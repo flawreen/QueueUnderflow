@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace QueueUnderflow.Models
 {
@@ -16,6 +18,16 @@ namespace QueueUnderflow.Models
         public int? CategoryId { get; set; }
         public virtual Category? Category { get; set; }
         public virtual ICollection<Answer>? Answers { get; set; }
+<<<<<<< Updated upstream
         public virtual ApplicationUser User { get; set; } 
+=======
+
+        // Am adaugat un FK pt user
+        public string? UserId { get; set; }
+        public virtual ApplicationUser? User { get; set; }
+
+        [NotMapped]
+        public IEnumerable<SelectListItem>? Categ { get; set; }
+>>>>>>> Stashed changes
     }
 }
