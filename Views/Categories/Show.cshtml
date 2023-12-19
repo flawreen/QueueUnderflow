@@ -1,26 +1,9 @@
-﻿<h2>Show category</h2>
-<br />
+@model QueueUnderflow.Models.Category
 
-<<<<<<< Updated upstream
-<p>@ViewBag.Category.CategoryName</p>
-
-<br />
-
-<form method="post" action="/Categories/Delete/@ViewBag.Category.Id">
-
-    <button type="submit">Delete category</button>
-
-</form>
-
-<br />
-
-<a href="/Categories/Index">Show categories</a>
-=======
 <div>
     <div class="row category-title">
         @Model.CategoryName
     </div>
-    
     @foreach (QueueUnderflow.Models.Discussion discussion in ViewBag.Discussions)
     {
         <div class="row card" style="width:80rem;">
@@ -57,5 +40,4 @@
     </div>
 
 </div>
->>>>>>> Stashed changes
 

@@ -1,12 +1,8 @@
-<<<<<<< Updated upstream
-﻿using Microsoft.AspNetCore.Mvc;
-=======
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
->>>>>>> Stashed changes
 using QueueUnderflow.Data;
 using QueueUnderflow.Models;
 using System;
@@ -16,10 +12,18 @@ namespace QueueUnderflow.Controllers
     public class DiscussionsController : Controller
     {
         private readonly ApplicationDbContext db;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
-        public DiscussionsController(ApplicationDbContext context)
+        public DiscussionsController(
+            ApplicationDbContext context,
+            UserManager<ApplicationUser> userManager,
+            RoleManager<IdentityRole> roleManager
+            )
         {
             db = context;
+            _userManager = userManager;
+            _roleManager = roleManager;
         }
 
 
@@ -40,20 +44,25 @@ namespace QueueUnderflow.Controllers
             return View();
         }
 
+        
         public ActionResult Show(int id)
         {
-            Discussion discussion = db.Discussions.Find(id);
+            Discussion discussion = db.Discussions
+                .Include("Answers")
+                .Include("User")
+                .Include("Answers.User")
+                .Where(disc => disc.Id == id).First();
 
-            ViewBag.Discussion = discussion;
-
-            return View();
+            return View( discussion );
         }
 
+        [Authorize(Roles = "User, Admin")]
         public IActionResult New()
         {
             return View();
         }
 
+        [Authorize(Roles = "User, Admin")]
         [HttpPost]
         public IActionResult New(Discussion discussion)
         {
@@ -101,6 +110,7 @@ namespace QueueUnderflow.Controllers
             return selectList;
         }
 
+        [Authorize(Roles = "User, Admin")]
         public IActionResult Edit(int id)
         {
             Discussion discussion = db.Discussions.Find(id);
@@ -110,6 +120,7 @@ namespace QueueUnderflow.Controllers
             return View();
         }
 
+        [Authorize(Roles = "User, Admin")]
         [HttpPost]
         public ActionResult Edit(int id, Discussion requestDiscussion)
         {
@@ -131,6 +142,7 @@ namespace QueueUnderflow.Controllers
             }
         }
 
+        [Authorize(Roles = "User, Admin")]
         [HttpPost]
         public ActionResult Delete(int id)
         {

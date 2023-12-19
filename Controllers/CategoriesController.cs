@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using QueueUnderflow.Data;
 using QueueUnderflow.Models;
 using System;
@@ -8,19 +11,24 @@ namespace QueueUnderflow.Controllers
     public class CategoriesController : Controller
     {
         private readonly ApplicationDbContext db;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
-        public CategoriesController(ApplicationDbContext context)
+        public CategoriesController(
+            ApplicationDbContext context,
+            UserManager<ApplicationUser> userManager,
+            RoleManager<IdentityRole> roleManager
+            )
         {
             db = context;
+            _userManager = userManager;
+            _roleManager = roleManager;
         }
-
 
 
         public IActionResult Index()
         {
-            var categories = from categ in db.Categories
-                             select categ;
-
+            var categories = db.Categories.Include("Discussions");
             ViewBag.Categories = categories;
 
             return View();
@@ -28,14 +36,6 @@ namespace QueueUnderflow.Controllers
 
         public ActionResult Show(int id)
         {
-<<<<<<< Updated upstream
-            Category categ = db.Categories.Find(id);
-
-            ViewBag.Category = categ;
-
-            return View();
-=======
-
             Category categ = db.Categories.Include("Discussions").Where(cat => cat.Id == id).First();
 
             // Alegem sa afisam 3 discutii pe pagina
@@ -68,14 +68,15 @@ namespace QueueUnderflow.Controllers
             ViewBag.lastPage = Math.Ceiling((float)totalItems / (float)_perPage);
             ViewBag.Discussions = paginatedDiscussions;
             return View(categ);
->>>>>>> Stashed changes
         }
 
+        [Authorize(Roles = "Admin")]
         public IActionResult New()
         {
             return View();
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public IActionResult New(Category categ)
         {
@@ -94,6 +95,7 @@ namespace QueueUnderflow.Controllers
 
         }
 
+        [Authorize(Roles = "Admin")]
         public IActionResult Edit(int id)
         {
             Category categ = db.Categories.Find(id);
@@ -103,6 +105,7 @@ namespace QueueUnderflow.Controllers
             return View();
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public ActionResult Edit(int id, Category requestCateg)
         {
@@ -122,6 +125,7 @@ namespace QueueUnderflow.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public ActionResult Delete(int id)
         {

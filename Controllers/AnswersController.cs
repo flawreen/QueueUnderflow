@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using QueueUnderflow.Data;
 using QueueUnderflow.Models;
 
@@ -7,13 +9,23 @@ namespace QueueUnderflow.Controllers
     public class AnswersController : Controller
     {
         private readonly ApplicationDbContext db;
-        public AnswersController(ApplicationDbContext context)
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
+
+        public AnswersController(
+            ApplicationDbContext context,
+            UserManager<ApplicationUser> userManager,
+            RoleManager<IdentityRole> roleManager
+            )
         {
             db = context;
+            _userManager = userManager;
+            _roleManager = roleManager;
         }
 
 
         // Adaugarea unui raspuns asociat unei discutii in baza de date
+        [Authorize(Roles = "User, Admin")]
         [HttpPost]
         public IActionResult New(Answer answer)
         {
@@ -34,6 +46,7 @@ namespace QueueUnderflow.Controllers
         }
 
         // Stergerea unui raspuns asociat unei discutii din baza de date
+        [Authorize(Roles = "User, Admin")]
         [HttpPost]
         public IActionResult Delete(int id)
         {
@@ -45,7 +58,7 @@ namespace QueueUnderflow.Controllers
 
         // In acest moment vom implementa editarea intr-o pagina View separata
         // Se editeaza un raspuns existent
-
+        [Authorize(Roles = "User, Admin")]
         public IActionResult Edit(int id)
         {
             Answer answer = db.Answers.Find(id);
@@ -53,6 +66,7 @@ namespace QueueUnderflow.Controllers
             return View();
         }
 
+        [Authorize(Roles = "User, Admin")]
         [HttpPost]
         public IActionResult Edit(int id, Answer requestAnswer)
         {
