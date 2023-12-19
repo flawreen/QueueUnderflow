@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using QueueUnderflow.Data;
 using QueueUnderflow.Models;
@@ -34,6 +35,12 @@ namespace QueueUnderflow.Controllers
 
             ViewBag.Discussions = discussions;
 
+            if (TempData.ContainsKey("message"))
+            {
+                ViewBag.Message = TempData["message"];
+                ViewBag.Alert = TempData["messageType"];
+            }
+
             return View();
         }
 
@@ -59,19 +66,48 @@ namespace QueueUnderflow.Controllers
         [HttpPost]
         public IActionResult New(Discussion discussion)
         {
-            try
+            discussion.Date = DateTime.Now;
+
+            // preluam id-ul utilizatorului care posteaza articolul
+            discussion.UserId = _userManager.GetUserId(User);
+
+
+            if (ModelState.IsValid)
             {
                 db.Discussions.Add(discussion);
-
                 db.SaveChanges();
-
+                TempData["message"] = "The discussion has been successfully added";
+                TempData["messageType"] = "alert-success";
                 return RedirectToAction("Index");
             }
-            catch (Exception)
+            else
             {
-                return View();
+
+                discussion.Category = (Category?)GetAllCategories();
+                return View(discussion);
             }
 
+        }
+        [NonAction]
+        public IEnumerable<SelectListItem> GetAllCategories()
+        {
+            
+            var selectList = new List<SelectListItem>();
+
+            
+            var categories = from cat in db.Categories
+                             select cat;
+
+            foreach (var category in categories)
+            {
+                selectList.Add(new SelectListItem
+                {
+                    Value = category.Id.ToString(),
+                    Text = category.CategoryName.ToString()
+                });
+            }
+        
+            return selectList;
         }
 
         [Authorize(Roles = "User, Admin")]

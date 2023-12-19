@@ -1,15 +1,43 @@
-﻿@model QueueUnderflow.Models.Category
+@model QueueUnderflow.Models.Category
 
 <div>
     <div class="row category-title">
         @Model.CategoryName
     </div>
-
-    @foreach (QueueUnderflow.Models.Discussion discussion in Model.Discussions)
+    @foreach (QueueUnderflow.Models.Discussion discussion in ViewBag.Discussions)
     {
         <div class="row card" style="width:80rem;">
             @Html.Partial("DiscussionPreview", discussion)
         </div>
     }
+
+    <div>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination">
+                <li class="page-item">
+                    <a class="page-link"
+                       href="/Categories/Show/@Model.Id?page=1" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                @for (int i = 1; i <= ViewBag.lastPage; i++)
+                {
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="/Categories/Show/@Model.Id?page=@i">@(i)</a>
+                    </li>
+                }
+                <li class="page-item">
+                    <a class="page-link"
+                       href="/Categories/Show/@Model.Id?page=@(ViewBag.lastPage)" aria-
+                       label="Next">
+
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
 </div>
 
