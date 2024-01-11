@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace QueueUnderflow.Models
 {
@@ -15,5 +17,8 @@ namespace QueueUnderflow.Models
         public string? FirstName { get; set; }
 
         public string? LastName { get; set; }
+
+        [NotMapped]
+        public IEnumerable<SelectListItem>? AllRoles { get; set; }
     }
 }

@@ -13,8 +13,6 @@ namespace QueueUnderflow.Models
 
         public virtual Discussion? Discussion { get; set; }
 
-        // ?? e Answer - Discussion many to one nu many to many
-        //public virtual ICollection<Discussion> Discussions { get; set; }
 
         // Am adaugat un FK pt user
         //public string? UserId { get; set; }

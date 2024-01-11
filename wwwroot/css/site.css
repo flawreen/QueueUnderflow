@@ -1,6 +1,23 @@
 html {
     font-size: 14px;
 }
+h1.present {
+    color: #30336b; /* Bootstrap primary color for a vibrant look */
+    font-size: 3rem; /* Adjust the font size for emphasis */
+    font-weight: bold; /* Bold font weight for prominence */
+    text-align: center; /* Center align the text */
+    margin: 10px 0; /* Add some margin for spacing */
+}
+
+h2.present {
+    color: #30336b; /* Bootstrap primary color for a vibrant look */
+    text-align: center; /* Center align the text */
+    margin: 10px 0; /* Add some margin for spacing */
+}
+
+.container {
+    align-items: center;
+}
 
 .note-editor .dropdown-toggle::after {
     display: none;
@@ -39,6 +56,12 @@ h3.category {
     padding-bottom: 5px; /* Add padding at the bottom for a bit of space above the border */
     transition: color 0.3s; /* Smooth transition for color change */
 }
+
+.buton-sort {
+    background-color: #30336b !important;
+    color: #dff9fb !important;
+}
+
 
 .navbar {
     background-color: #30336b !important;
@@ -93,11 +116,11 @@ a.nav-link:hover {
     line-height: 1.6;
 }
 
-.article-card .category {
+.category {
     background-color: #30336b;
     color: #fff;
     padding: 2px 10px;
-    border-radius: 3px;
+    border-radius: 5px;
     display: inline-block;
     margin-bottom: 10px;
 }

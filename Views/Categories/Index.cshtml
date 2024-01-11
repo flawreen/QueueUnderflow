@@ -1,12 +1,10 @@
-﻿<h2 class="h2-title">Categories</h2>
+﻿<h2 class="h2-title mb-5">Categories</h2>
 <br />
 
-@* In Index afisez titlul categoriei + primele 3 discutii
-   + buton care trimite catre Show pt taskul tau cu afisare paginata
-*@
 @{
     int discussionCount;
 }
+
 <div>
     @foreach (QueueUnderflow.Models.Category categ in ViewBag.Categories)
     {
@@ -30,7 +28,9 @@
             }
 
             <div class="row card" style="width:80rem;">
-                @Html.Partial("DiscussionPreview", discussion)
+                <div class="card-body article-card">
+                    @Html.Partial("DiscussionPreview", discussion)
+                </div>
             </div>
 
             discussionCount -= 1;
@@ -43,3 +43,22 @@
         <br /><br />
     }
 </div>
+
+@if (ViewBag.Notification != null) {
+    <div id="toast" class="toast my-5 mx-2 align-items-center position-absolute top-0 end-0 text-white @ViewBag.Type border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body">
+            <i class="bi @ViewBag.Icon"></i> @ViewBag.Notification
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+
+    @section scripts {
+        <script type="text/javascript">
+            $(document).ready(function() {
+                $('#toast').toast("show");
+            });
+        </script> 
+    }
+}
