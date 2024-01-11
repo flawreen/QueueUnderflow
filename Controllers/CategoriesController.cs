@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QueueUnderflow.Data;
 using QueueUnderflow.Models;
+using System.Text.RegularExpressions;
 using System;
+using System.Collections.Generic;
 
 namespace QueueUnderflow.Controllers
 {
@@ -28,6 +30,13 @@ namespace QueueUnderflow.Controllers
 
         public IActionResult Index()
         {
+            if (TempData["notification"] != null)
+            {
+                ViewBag.Notification = TempData["notification"];
+                ViewBag.Icon = TempData["icon"];
+                ViewBag.Type = TempData["type"];
+            }
+
             var categories = db.Categories.Include("Discussions");
             ViewBag.Categories = categories;
 
@@ -38,22 +47,24 @@ namespace QueueUnderflow.Controllers
         {
             Category categ = db.Categories.Include("Discussions").Where(cat => cat.Id == id).First();
 
-            // Alegem sa afisam 3 discutii pe pagina
             int _perPage = 3;
-            var discussions = db.Discussions.Include("Category").Include("User").OrderBy(a => a.Date);
-            if (TempData.ContainsKey("message"))
+
+            IOrderedQueryable<Discussion>? discussions;
+            var sortType = Convert.ToString(HttpContext.Request.Query["sort"]);
+            ViewBag.SortType = sortType;
+            if (sortType == "answers")
             {
-                ViewBag.message = TempData["message"].ToString();
-                ViewBag.Alert = TempData["messageType"];
+                discussions = db.Discussions.Include("Category").Include("User")
+                .Where(disc => disc.CategoryId == id).OrderByDescending(a => a.Answers.Count() );
+            }
+            else
+            {
+                discussions = db.Discussions.Include("Category").Include("User")
+                .Where(disc => disc.CategoryId == id).OrderBy(a => a.Date);
             }
 
-            // Fiind un numar variabil de discutii, verificam de fiecare data utilizand
-            // metoda Count()
             int totalItems = discussions.Count();
 
-            // Se preia pagina curenta din View-ul asociat
-            // Numarul paginii este valoarea parametrului page din ruta
-            // /Discussions/Show/Model.Id?page=valoare
             var currentPage = Convert.ToInt32(HttpContext.Request.Query["page"]);
             
             var offset = 0;
@@ -64,7 +75,6 @@ namespace QueueUnderflow.Controllers
             }
             var paginatedDiscussions = discussions.Skip(offset).Take(_perPage);
 
-            // Preluam numarul ultimei pagini
             ViewBag.lastPage = Math.Ceiling((float)totalItems / (float)_perPage);
             ViewBag.Discussions = paginatedDiscussions;
             return View(categ);
@@ -80,19 +90,29 @@ namespace QueueUnderflow.Controllers
         [HttpPost]
         public IActionResult New(Category categ)
         {
-            try
+            if (User.IsInRole("Admin"))
             {
-                db.Categories.Add(categ);
-
-                db.SaveChanges();
-
+                if (ModelState.IsValid)
+                {
+                    db.Categories.Add(categ);
+                    db.SaveChanges();
+                    TempData["notification"] = "Successfully added category.";
+                    TempData["icon"] = "bi-plus-circle";
+                    TempData["type"] = "bg-success";
+                    return RedirectToAction("Index");
+                }
+                else
+                {
+                    return View();
+                }
+            }
+            else
+            {
+                TempData["notification"] = "Not allowed";
+                TempData["icon"] = "bi-exclamation-triangle";
+                TempData["type"] = "bg-danger";
                 return RedirectToAction("Index");
             }
-            catch (Exception)
-            {
-                return View();
-            }
-
         }
 
         [Authorize(Roles = "Admin")]
@@ -100,9 +120,7 @@ namespace QueueUnderflow.Controllers
         {
             Category categ = db.Categories.Find(id);
 
-            ViewBag.Categories = categ;
-
-            return View();
+            return View( categ );
         }
 
         [Authorize(Roles = "Admin")]
@@ -111,17 +129,28 @@ namespace QueueUnderflow.Controllers
         {
             Category categ = db.Categories.Find(id);
 
-            try
+            if (User.IsInRole("Admin"))
             {
-                categ.CategoryName = requestCateg.CategoryName;
-
-                db.SaveChanges();
-
-                return RedirectToAction("Index");
+                if (ModelState.IsValid)
+                {
+                    categ.CategoryName = requestCateg.CategoryName;
+                    db.SaveChanges();
+                    TempData["notification"] = "Category edited.";
+                    TempData["icon"] = "bi-pencil";
+                    TempData["type"] = "bg-info";
+                    return RedirectToAction("Index");
+                }
+                else
+                {
+                    return View(requestCateg);
+                }
             }
-            catch (Exception)
+            else
             {
-                return RedirectToAction("Edit", categ.Id);
+                TempData["notification"] = "Not allowed";
+                TempData["icon"] = "bi-exclamation-triangle";
+                TempData["type"] = "bg-danger";
+                return RedirectToAction("Index");
             }
         }
 
@@ -129,13 +158,45 @@ namespace QueueUnderflow.Controllers
         [HttpPost]
         public ActionResult Delete(int id)
         {
-            Category categ = db.Categories.Find(id);
+            if (User.IsInRole("Admin"))
+            {
+                var categ = db.Categories
+                .Include("Discussions")
+                .Where(c => c.Id == id)
+                .First();
 
-            db.Categories.Remove(categ);
+                if (categ.Discussions.Count > 0)
+                {
+                    foreach (var discussion in categ.Discussions!)
+                    {
+                        // nu am putut sa sterg in mod normal raspunsurile pentru ca erau many-to-many cu discutiile ??
+                        var answers = db.Answers.Where(a => a.DiscussionId == discussion.Id);
+                        if (answers.Count() > 0)
+                        {
+                            foreach (var ans in answers)
+                            {
+                                db.Answers.Remove(ans);
+                            }
+                        }
+                        db.Discussions.Remove(discussion);
+                    }
+                }
 
-            db.SaveChanges();
+                db.Categories.Remove(categ);
+                db.SaveChanges();
 
-            return RedirectToAction("Index");
+                TempData["notification"] = "Category deleted.";
+                TempData["icon"] = "bi-trash3";
+                TempData["type"] = "bg-danger";
+                return RedirectToAction("Index");
+            }
+            else
+            {
+                TempData["notification"] = "Not allowed";
+                TempData["icon"] = "bi-exclamation-triangle";
+                TempData["type"] = "bg-danger";
+                return RedirectToAction("Index");
+            }
         }
     }
 }

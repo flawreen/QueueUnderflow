@@ -1,22 +1,28 @@
-﻿<h2>Discussions</h2>
-<br />
-
-@foreach (var disc in ViewBag.Discussions)
-{
-    <p>@disc.Title</p>
-    <p>@disc.Content</p>
-    <p>@disc.Date</p>
-
-    <br />
-    <a href="/Discussions/Show/@disc.Id">Show discussion</a>
-    <br />
-    <a href="/Discussions/Edit/@disc.Id">Edit discussion</a>
-    <hr />
+﻿@{
 
 }
 
-<a href="/Discussions/New">Add Discussion</a>
+<h2 class="h2-title mb-5">Search Results</h2>
 <br />
-<a href="/Categories/Index">Show categories</a>
+
+@if (ViewBag.IsNull != "null")
+{
+    @foreach (QueueUnderflow.Models.Discussion discussion in ViewBag.Discussions)
+    {
+        <div class="row card" style="width:80rem;">
+            <div class="card-body article-card">
+                <div class="category" style="width:auto;">@discussion.Category.CategoryName</div>
+                @Html.Partial("DiscussionPreview", @discussion)
+            </div>
+        </div>
+    }
+}
+else
+{
+    <div class="alert alert-danger" role="alert">
+        Nu au fost gasite discutii.
+    </div>
+}
+
 
 

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using QueueUnderflow.Data;
 using QueueUnderflow.Models;
 using System;
+using System.Text.RegularExpressions;
 
 namespace QueueUnderflow.Controllers
 {
@@ -26,20 +27,93 @@ namespace QueueUnderflow.Controllers
             _roleManager = roleManager;
         }
 
+        // motorul de cautare
+        [NonAction]
+        public IQueryable<Discussion> Search(string searchValue)
+        {
+            if (searchValue == null || searchValue.Length == 0)
+            {
+                return null;
+            }
+            // regex care ia doar litere si cifre
+            var regex = new Regex(@"\W+");
+            // lista de keywords
+            var keywords = regex.Split(searchValue.ToLower());
+            // iau obiectele din baza de date
+            var discussions = db.Discussions.Include("Answers").Include("Category");
+            // max-heap: cele mai relevante discutii gasite
+            var rez = new PriorityQueue<Discussion, int>(Comparer<int>.Create((a, b) => b - a));
 
+            foreach (var discussion in discussions)
+            {
+                // fac split sa iau doar cuvintele sub forma de lista din titlu, description + raspunsuri
+                var allWords = regex.Split(discussion.Title.ToLower()).Union(regex.Split(discussion.Content.ToLower())).ToList();
+                foreach (var comm in discussion.Answers)
+                {
+                    allWords.Union(regex.Split(comm.Content.ToLower()));
+                }
+
+                // relevanta = cate keyword-uri se regasesc in titlu, descriere si raspunsuri
+                int relevance = allWords.Intersect(keywords).Count();
+                if (relevance > 0)
+                {
+                    rez.Enqueue(discussion, relevance);  // adaug in max-heap
+                }
+            }
+
+            // scot in ordine obiectele din max-heap si le incarc intr-o lista
+            List<Discussion> res = new List<Discussion>();
+            while (rez.TryDequeue(out var obj, out var priority))
+            {
+                res.Add(obj);
+            }
+
+            // nu s-au gasit rezultate
+            if (!res.Any())
+            {
+                return null;
+            }
+
+            return res.AsQueryable();
+        }
+
+        [HttpPost]
+        public IActionResult Index(string searchValue) // actiunea care afiseaza rezultatele searchului
+        {
+            var discussions = Search(searchValue);
+            if (discussions == null)
+            {
+                ViewBag.IsNull = "null";
+                return View();
+            }
+
+            var sortType = Convert.ToString(HttpContext.Request.Query["sort"]);
+            if (sortType == "answers")
+            {
+                discussions = discussions.OrderByDescending(a => a.Answers.Count());
+            }
+            else
+            {
+                discussions = discussions.OrderBy(a => a.Date);
+            }
+
+            ViewBag.Discussions = discussions;
+            return View();
+        }
 
         public IActionResult Index()
         {
-            var discussions = from discussion in db.Discussions
-                           select discussion;
-
-            ViewBag.Discussions = discussions;
-
-            if (TempData.ContainsKey("message"))
+            var discussions = db.Discussions.Include("Category");
+            var sortType = Convert.ToString(HttpContext.Request.Query["sort"]);
+            if (sortType == "answers")
             {
-                ViewBag.Message = TempData["message"];
-                ViewBag.Alert = TempData["messageType"];
+                discussions = discussions.OrderByDescending(a => a.Answers.Count());
             }
+            else
+            {
+                discussions = discussions.OrderBy(a => a.Date);
+            }
+            ViewBag.Discussions = discussions;
 
             return View();
         }
@@ -88,27 +162,6 @@ namespace QueueUnderflow.Controllers
             }
 
         }
-        [NonAction]
-        public IEnumerable<SelectListItem> GetAllCategories()
-        {
-            
-            var selectList = new List<SelectListItem>();
-
-            
-            var categories = from cat in db.Categories
-                             select cat;
-
-            foreach (var category in categories)
-            {
-                selectList.Add(new SelectListItem
-                {
-                    Value = category.Id.ToString(),
-                    Text = category.CategoryName.ToString()
-                });
-            }
-        
-            return selectList;
-        }
 
         [Authorize(Roles = "User, Admin")]
         public IActionResult Edit(int id)
@@ -153,6 +206,29 @@ namespace QueueUnderflow.Controllers
             db.SaveChanges();
 
             return RedirectToAction("Index");
+        }
+
+
+        [NonAction]
+        public IEnumerable<SelectListItem> GetAllCategories()
+        {
+
+            var selectList = new List<SelectListItem>();
+
+
+            var categories = from cat in db.Categories
+                             select cat;
+
+            foreach (var category in categories)
+            {
+                selectList.Add(new SelectListItem
+                {
+                    Value = category.Id.ToString(),
+                    Text = category.CategoryName.ToString()
+                });
+            }
+
+            return selectList;
         }
     }
 }

@@ -1,15 +1,27 @@
-﻿
-<h2>Edit category</h2>
+﻿@{
 
-<form method="post" action="/Categories/Edit/@ViewBag.Categories.Id">
+}
+@model QueueUnderflow.Models.Category
 
-    <label>Category name</label>
+<div style="width:50rem;">
+    @using (Html.BeginForm(
+    actionName: "Edit",
+    controllerName: "Categories",
+    method: FormMethod.Post
+    ))
+    {
+        @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+        <br />
 
-    <br />
+        <br />
+        @Html.Label("CategoryName", "Category name")
+        <br />
+        @Html.EditorFor(m => m.CategoryName, new { htmlAttributes = new { @class = "form-control"} })
+        @Html.ValidationMessage("CategoryName", null, new { @class = "text-danger" })
+        <br />
 
-    <input type="text" name="CategoryName" value="@ViewBag.Categories.CategoryName" />
-    
-    <button type="submit">Modify category</button>
+        <br />
 
-</form>
-
+        <button class="btn btn-success" type="submit"><i class="bi bi-pencil"></i> Edit</button>
+    }
+</div>
