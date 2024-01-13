@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Humanizer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
 using QueueUnderflow.Data;
 using QueueUnderflow.Models;
@@ -31,6 +33,8 @@ namespace QueueUnderflow.Controllers
         [NonAction]
         public IQueryable<Discussion> Search(string searchValue)
         {
+            SetAccessRights();
+
             if (searchValue == null || searchValue.Length == 0)
             {
                 return null;
@@ -80,11 +84,20 @@ namespace QueueUnderflow.Controllers
         [HttpPost]
         public IActionResult Index(string searchValue) // actiunea care afiseaza rezultatele searchului
         {
+            SetAccessRights();
+
             var discussions = Search(searchValue);
             if (discussions == null)
             {
                 ViewBag.IsNull = "null";
                 return View();
+            }
+
+            if (TempData["notification"] != null)
+            {
+                ViewBag.Notification = TempData["notification"];
+                ViewBag.Icon = TempData["icon"];
+                ViewBag.Type = TempData["type"];
             }
 
             var sortType = Convert.ToString(HttpContext.Request.Query["sort"]);
@@ -103,6 +116,8 @@ namespace QueueUnderflow.Controllers
 
         public IActionResult Index()
         {
+            SetAccessRights();
+
             var discussions = db.Discussions.Include("Category");
             var sortType = Convert.ToString(HttpContext.Request.Query["sort"]);
             if (sortType == "answers")
@@ -121,6 +136,8 @@ namespace QueueUnderflow.Controllers
         
         public ActionResult Show(int id)
         {
+            SetAccessRights();
+
             Discussion discussion = db.Discussions
                 .Include("Answers")
                 .Include("User")
@@ -130,19 +147,56 @@ namespace QueueUnderflow.Controllers
             return View( discussion );
         }
 
+        [HttpPost]
+        [Authorize(Roles = "User,Admin")]
+        public IActionResult Show([FromForm] Answer answer)
+        {
+            SetAccessRights();
+
+            answer.Date = DateTime.Now;
+
+            answer.UserId = _userManager.GetUserId(User);
+
+            if (ModelState.IsValid)
+            {
+                db.Answers.Add(answer);
+                db.SaveChanges();
+                return Redirect("/Discussions/Show/" + answer.DiscussionId);
+            }
+
+            else
+            {
+                Discussion disc = db.Discussions.Include("Category")
+                                         .Include("User")
+                                         .Include("Answers")
+                                         .Include("Answers.User")
+                                         .Where(disc => disc.Id == answer.DiscussionId)
+                                         .First();
+
+                return View(disc);
+            }
+        }
+
         [Authorize(Roles = "User, Admin")]
         public IActionResult New()
         {
-            return View();
+            SetAccessRights();
+
+            Discussion discussion = new Discussion();
+
+            discussion.Categ = GetAllCategories();
+
+            return View(discussion);
         }
 
         [Authorize(Roles = "User, Admin")]
         [HttpPost]
         public IActionResult New(Discussion discussion)
         {
+            SetAccessRights();
+
             discussion.Date = DateTime.Now;
 
-            // preluam id-ul utilizatorului care posteaza articolul
             discussion.UserId = _userManager.GetUserId(User);
 
 
@@ -150,14 +204,15 @@ namespace QueueUnderflow.Controllers
             {
                 db.Discussions.Add(discussion);
                 db.SaveChanges();
-                TempData["message"] = "The discussion has been successfully added";
-                TempData["messageType"] = "alert-success";
-                return RedirectToAction("Index");
+                TempData["notification"] = "The discussion has been successfully added";
+                TempData["icon"] = "bi-plus-circle";
+                TempData["type"] = "bg-success";
+                return Redirect("/Home/Index");
             }
             else
             {
 
-                discussion.Category = (Category?)GetAllCategories();
+                discussion.Categ = GetAllCategories();
                 return View(discussion);
             }
 
@@ -166,32 +221,124 @@ namespace QueueUnderflow.Controllers
         [Authorize(Roles = "User, Admin")]
         public IActionResult Edit(int id)
         {
-            Discussion discussion = db.Discussions.Find(id);
+            SetAccessRights();
 
-            ViewBag.Discussion = discussion;
+            Discussion discussion = db.Discussions.Include("Category").Where(disc => disc.Id == id).First();
 
-            return View();
+            discussion.Categ = GetAllCategories();
+
+            if(discussion.UserId == _userManager.GetUserId(User) || User.IsInRole("Admin"))
+            {
+                return View(discussion);
+            }
+            else
+            {
+                TempData["notification"] = "You're not allowed to modify a discussion that you didn't create.";
+                TempData["type"] = "bg-danger";
+                
+                return Redirect("/Home/Index");
+            }
         }
 
         [Authorize(Roles = "User, Admin")]
         [HttpPost]
         public ActionResult Edit(int id, Discussion requestDiscussion)
         {
+            SetAccessRights();
+
             Discussion discussion = db.Discussions.Find(id);
 
-            try
+            if (ModelState.IsValid) 
             {
-                discussion.Title = requestDiscussion.Title;
-                discussion.Content = requestDiscussion.Content;
-                discussion.Date = requestDiscussion.Date;
 
-                db.SaveChanges();
 
-                return RedirectToAction("Index");
+                if (discussion.UserId == _userManager.GetUserId(User) || User.IsInRole("Admin"))
+                {
+                    discussion.Title = requestDiscussion.Title;
+                    discussion.Content = requestDiscussion.Content;
+                    discussion.CategoryId = requestDiscussion.CategoryId;
+          
+                    TempData["notification"] = "The discussion has been modified.";
+                    TempData["icon"] = "bi-plus-circle";
+                    TempData["type"] = "bg-success";
+                    db.SaveChanges();
+
+                    return Redirect("/Home/Index");
+                }
+                else
+                {
+                    
+                    TempData["notification"] = "You're not allowed to modify a discussion that you didn't create.";
+                    TempData["type"] = "bg-danger";
+                    return Redirect("/Home/Index");
+                }
+                
             }
-            catch (Exception)
+            else
             {
-                return RedirectToAction("Edit", discussion.Id);
+                requestDiscussion.Categ = GetAllCategories();
+                return View(requestDiscussion);
+            }
+        }
+
+        [Authorize(Roles = "Admin")]
+        public IActionResult EditAdmin(int id)
+        {
+            SetAccessRights();
+
+            Discussion discussion = db.Discussions.Include("Answers").Include("Category").Where(disc => disc.Id == id).First();
+
+            discussion.Categ = GetAllCategories();
+
+            if (User.IsInRole("Admin"))
+            {
+                return View(discussion);
+            }
+            else
+            {
+                TempData["notification"] = "You're not allowed to modify a discussion that you didn't create.";
+                TempData["type"] = "bg-danger";
+                return Redirect("/Home/Index");
+            }
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost]
+        public ActionResult EditAdmin(int id, Discussion requestDiscussion)
+        {
+            SetAccessRights();
+
+            Discussion discussion = db.Discussions.Find(id);
+
+
+            if (ModelState.IsValid)
+            {
+
+                if (User.IsInRole("Admin"))
+                {
+                    discussion.Title = requestDiscussion.Title;
+                    discussion.Content = requestDiscussion.Content;
+                    discussion.CategoryId = requestDiscussion.CategoryId;
+
+                    TempData["notification"] = "The discussion has been modified.";
+                    TempData["icon"] = "bi-plus-circle";
+                    TempData["type"] = "bg-success";
+                    db.SaveChanges();
+
+                    return Redirect("/Home/Index");
+                }
+                else
+                {
+                    TempData["notification"] = "You're not allowed to modify a discussion that you didn't create.";
+                    TempData["type"] = "bg-danger";
+                    return Redirect("/Home/Index");
+                }
+
+            }
+            else
+            {
+                requestDiscussion.Categ = GetAllCategories();
+                return View(requestDiscussion);
             }
         }
 
@@ -199,17 +346,38 @@ namespace QueueUnderflow.Controllers
         [HttpPost]
         public ActionResult Delete(int id)
         {
-            Discussion discussion = db.Discussions.Find(id);
+            SetAccessRights();
 
-            db.Discussions.Remove(discussion);
+            Discussion discussion = db.Discussions.Include("Answers").Where(disc => disc.Id == id).First();
 
-            db.SaveChanges();
+            if (discussion.UserId == _userManager.GetUserId(User) || User.IsInRole("Admin"))
+            {
+                db.Discussions.Remove(discussion);
+                db.SaveChanges();
+              
+                TempData["notification"] = "The discussion has been deleted.";
+                TempData["icon"] = "bi-plus-circle";
+                TempData["type"] = "bg-success";
+                db.SaveChanges();
 
-            return RedirectToAction("Index");
+                return Redirect("/Home/Index");
+            }
+            else
+            {
+                TempData["notification"] = "You're not allowed to modify a discussion that you didn't create.";
+                TempData["type"] = "bg-danger";
+                return Redirect("/Home/Index");
+            }
         }
 
+        private void SetAccessRights()
+        {
+            ViewBag.EsteAdmin = User.IsInRole("Admin");
 
-        [NonAction]
+            ViewBag.UserCurent = _userManager.GetUserId(User);
+        }
+
+            [NonAction]
         public IEnumerable<SelectListItem> GetAllCategories()
         {
 

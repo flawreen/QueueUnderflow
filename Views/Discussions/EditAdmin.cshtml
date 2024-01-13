@@ -7,31 +7,31 @@
 <br />
 <div class="container mt-5">
     <div class="row">
+        @{
+            string timeAgo = @Model.Date.ToString("MMMM dd, yyyy");
+        }
+
+
+        <div class="card-body article-card">
+            <div class="card-body">
+                <h5 class="card-title">@Model.Title</h5>
+                <div class="card-text">@Html.Raw(Model.Content)</div>
+                <div class="text-end">
+                    <small>started @timeAgo</small>
+                </div>
+            </div>
+        </div>
+
         <div class="col-md-6 offset-3">
-            @using (Html.BeginForm(actionName: "Edit", controllerName: "Discussions",
+            @using (Html.BeginForm(actionName: "EditAdmin", controllerName: "Discussions",
             method: FormMethod.Post,
             routeValues: new { id = Model.Id }))
             {
                 /* @Html.HiddenFor(m => m.Id)  */
 
+                <input type="hidden" name="Title" value=@Model.Title />
 
-                @Html.Label("Title", "Discussion title")
-                <br />
-                @Html.EditorFor(m => m.Title, new { htmlAttributes = new { @class = "form-control" } })
-
-                @Html.ValidationMessageFor(m => m.Title, null, new { @class = "text-danger" })
-                <br />
-
-                <br />
-
-                @Html.Label("Content", "Discussion content")
-                <br />
-                @Html.Editor("Content", new { htmlAttributes = new { @class = "form-control" } })
-
-                @Html.ValidationMessageFor(m => m.Content, null, new { @class = "text-danger" })
-                <br />
-
-                <br />
+                <input type="hidden" name="Content" value=@Model.Content />
 
                 <label>Select the category</label>
                 @Html.DropDownListFor(m => m.CategoryId,
@@ -48,8 +48,3 @@
         </div>
     </div>
 </div>
-
-
-
-
-

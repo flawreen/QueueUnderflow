@@ -32,10 +32,9 @@
                 <br />
 
 
-                <input type="hidden" name="CategoryId" value="1" />
-                @*<label>Select the category</label>
+                <label>Select the category</label>
                 @Html.DropDownListFor(m => m.CategoryId, new SelectList(Model.Categ, "Value", "Text"),
-                         "Select the category", new { @class = "form-control" })*@
+                         "Select the category", new { @class = "form-control" })
 
                 @Html.ValidationMessageFor(m => m.CategoryId, null, new { @class = "text-danger" })
                 <br />

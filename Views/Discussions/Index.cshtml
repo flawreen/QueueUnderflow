@@ -2,6 +2,15 @@
 
 }
 
+
+@if (TempData["message"] != null)
+{
+    <div class="alert p-3 rounded-3 text-center mb-5 @ViewBag.Alert">
+        @ViewBag.Message
+    </div>
+}
+
+
 <h2 class="h2-title mb-5">Search Results</h2>
 <br />
 

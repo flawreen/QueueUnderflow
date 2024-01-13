@@ -27,6 +27,32 @@
                     <p class="small">@ans.Date.ToString("MMMM dd, yyyy")</p>
                     <p>@ans.Content</p>
                 </div>
+                @if (ans.User.Id == ViewBag.UserCurent || ViewBag.EsteAdmin)
+                {
+                    <div class="d-flex">
+
+                        @if (ans.User.Id == ViewBag.UserCurent)
+                        {
+                            <div>
+
+                                <a class="btn btn-outline-primary" href="/Answers/Edit/@ans.Id"><i class="bi bi-pencil-square"></i>Edit</a>
+
+                            </div>
+                        }
+                        <div>
+
+                            <form method="post" action="/Answers/Delete/@ans.Id">
+
+                                <button class="btn btn-outline-danger" type="submit"><i class="bi bi-trash"></i>Delete</button>
+
+                            </form>
+
+                        </div>
+
+                    </div>
+
+                }
+
             </div>
         </div>
     </div>
