@@ -24,7 +24,6 @@ namespace QueueUnderflow.Controllers
         }
 
 
-        // Adaugarea unui raspuns asociat unei discutii in baza de date
         [Authorize(Roles = "User, Admin")]
         [HttpPost]
         public IActionResult New(Answer answer)
@@ -35,7 +34,7 @@ namespace QueueUnderflow.Controllers
             {
                 db.Answers.Add(answer);
                 db.SaveChanges();
-                return Redirect("/Discussions/Show/" + answer.DiscussionId); // de modificat DiscussionId
+                return Redirect("/Discussions/Show/" + answer.DiscussionId);
             }
 
             catch (Exception)
@@ -45,25 +44,41 @@ namespace QueueUnderflow.Controllers
 
         }
 
-        // Stergerea unui raspuns asociat unei discutii din baza de date
         [Authorize(Roles = "User, Admin")]
         [HttpPost]
         public IActionResult Delete(int id)
         {
             Answer answer = db.Answers.Find(id);
-            db.Answers.Remove(answer);
-            db.SaveChanges();
-            return Redirect("/Discussions/Show/" + answer.DiscussionId);
+
+            if (answer.UserId == _userManager.GetUserId(User) || User.IsInRole("Admin"))
+            {
+                db.Answers.Remove(answer);
+                db.SaveChanges();
+                return Redirect("/Discussions/Show/" + answer.DiscussionId);
+            }
+            else
+            {
+                TempData["notification"] = "You're not allowed to delete that answer.";
+                TempData["type"] = "bg-danger";
+                return RedirectToAction("Index", "Discussions");
+            }
         }
 
-        // In acest moment vom implementa editarea intr-o pagina View separata
-        // Se editeaza un raspuns existent
         [Authorize(Roles = "User, Admin")]
         public IActionResult Edit(int id)
         {
             Answer answer = db.Answers.Find(id);
-            ViewBag.Answer = answer;
-            return View();
+
+            if (answer.UserId == _userManager.GetUserId(User))
+            {
+                return View(answer);
+            }
+            else
+            {
+                TempData["notification"] = "You're not allowed to edit that answer.";
+                TempData["type"] = "bg-danger";
+                return RedirectToAction("Index", "Discussions");
+            }
         }
 
         [Authorize(Roles = "User, Admin")]
@@ -71,20 +86,29 @@ namespace QueueUnderflow.Controllers
         public IActionResult Edit(int id, Answer requestAnswer)
         {
             Answer answer = db.Answers.Find(id);
-            try
+         
+            if (answer.UserId == _userManager.GetUserId(User))
             {
+                if (ModelState.IsValid)
+                {
+                    answer.Content = requestAnswer.Content;
 
-                answer.Content = requestAnswer.Content;
+                    db.SaveChanges();
 
-                db.SaveChanges();
-
-                return Redirect("/Discussions/Show/" + answer.DiscussionId);
+                    return Redirect("/Discussions/Show/" + answer.DiscussionId);
+                }
+                else
+                {
+                    return View(requestAnswer);
+                }
             }
-            catch (Exception e)
+            else
             {
-                return Redirect("/Discussions/Show/" + answer.DiscussionId);
-            }
+                TempData["notification"] = "You're not allowed to make changes";
+                TempData["type"] = "bg-danger";
+                return RedirectToAction("Index", "Discussions");
 
+            }
         }
     }
 }

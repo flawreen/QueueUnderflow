@@ -3,4 +3,73 @@
 }
 @model QueueUnderflow.Models.Discussion
 
-@Html.Partial("DiscussionInfo", @Model)
+<div class="card">
+    @Html.Partial("DiscussionInfo", @Model)
+    
+    @if(Model.UserId == ViewBag.UserCurent || ViewBag.EsteAdmin)
+    {
+        <div class="d-flex flex-row justify-content-between p-3 border-1 border-top">
+
+            @if (Model.UserId != ViewBag.UserCurent)
+            {
+                <a class="btn btn-success" href="/Discussions/EditAdmin/@Model.Id">Edit category</a>
+            }
+            else
+            {
+                <a class="btn btn-success" href="/Discussions/Edit/@Model.Id">Edit discussion</a>
+            }
+            
+
+            <form method="post" action="/Discussions/Delete/@Model.Id">
+
+                <button class="btn btn-danger" type="submit">Delete discussion</button>
+
+            </form>
+
+        </div>
+    }
+</div>
+
+@if (Model.UserId == ViewBag.UserCurent || ViewBag.EsteAdmin)
+{
+    <div class="container">
+
+        <div class="row">
+
+            <div class="col-md-2"></div>
+
+            <div class="col-md-8">
+
+                <div class="card">
+
+                    <form method="post" action="/Discussions/Show/@Model.Id">
+
+                        <div class="card-body">
+
+                            <input type="hidden" name="DiscussionId" value="@Model.Id" />
+
+                            <label>Answer content</label>
+                            <br />
+
+                            <textarea class="form-control" name="Content"></textarea>
+
+                            @Html.ValidationMessage("Content", null, new { @class = "text-danger" })
+
+                            <br /><br />
+
+                            <button class="btn btn-success " type="submit">Add answer</button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-2"></div>
+
+        </div>
+
+    </div>
+}

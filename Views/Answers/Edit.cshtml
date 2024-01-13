@@ -1,20 +1,36 @@
-﻿
+﻿@model QueueUnderflow.Models.Answer
+
+
 @{
     ViewBag.Title = "Edit";
 }
 
-<h2>Editing an answer</h2>
+<h2 class="h2-title mb-5">Edit answer</h2>
 <br />
 
-<form method="post" action="/Answers/Edit/@ViewBag.Answer.Id">
 
-    <label>Answer content</label>
-    <br />
+<div class="container mt-5" style="text-align:center;">
+    <div class="row">
+        <div class="col-md-6 offset-3">
+            @using (Html.BeginForm(controllerName: "Answers", actionName: "Edit",
+                  method: FormMethod.Post, routeValues: new { id = Model.Id }))
 
-    <textarea name="Content">@ViewBag.Answer.Content</textarea>
-    <br />
+            {
+                <h3>@Html.Label("Content", "Answer content")</h3>
+                <br />
+                <br />
 
-    <button class="btn  btn-primary" type="submit">Edit the answer</button>
+                @Html.Editor("Content", new { @class = "form-control" })
+                <br />
 
-</form>
+                @Html.ValidationMessage("Content", null, new { @class = "text-danger" })
 
+                <br />
+                <br />
+
+                <button class="btn  btn-primary" type="submit">Edit answer</button>
+
+}
+        </div>
+    </div>
+</div>
