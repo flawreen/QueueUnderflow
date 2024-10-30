@@ -60,7 +60,7 @@ namespace QueueUnderflow.Controllers
             else
             {
                 discussions = db.Discussions.Include("Category").Include("User")
-                .Where(disc => disc.CategoryId == id).OrderBy(a => a.Date);
+                .Where(disc => disc.CategoryId == id).OrderByDescending(a => a.Date);
             }
 
             int totalItems = discussions.Count();

@@ -372,6 +372,13 @@ namespace QueueUnderflow.Controllers
 
         private void SetAccessRights()
         {
+            ViewBag.AfisareButoane = false;
+
+            if (User.IsInRole("User"))
+            {
+                ViewBag.AfisareButoane = true;
+            }
+
             ViewBag.EsteAdmin = User.IsInRole("Admin");
 
             ViewBag.UserCurent = _userManager.GetUserId(User);
