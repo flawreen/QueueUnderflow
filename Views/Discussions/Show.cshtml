@@ -30,7 +30,7 @@
     }
 </div>
 
-@if (ViewBag.AfisareButoane == true)
+@if (Model.UserId == ViewBag.UserCurent || ViewBag.EsteAdmin)
 {
     <div class="container">
 
